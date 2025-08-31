@@ -114,3 +114,69 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+          enum:
+            - food
+            - music
+            - sports
+      required:
+        - name
+    ReleaseDate:
+      type: string
+      format: date
+    Anniversary:
+      type: integer
+    AlbumResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        category:
+          $ref: "#/components/schemas/Category"
+        anniversary:
+          $ref: "#/components/schemas/Anniversary"
+        releaseDate:
+          $ref: "#/components/schemas/ReleaseDate"
+      required:
+        - id
+        - title
+        - category
+        - anniversary
+        - releaseDate
+    AlbumUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        category:
+          $ref: "#/components/schemas/Category"
+    AlbumCreateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        category:
+          $ref: "#/components/schemas/Category"
+        releaseDate:
+          $ref: "#/components/schemas/ReleaseDate"
+      required:
+        - title
+        - category
+        - releaseDate
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
