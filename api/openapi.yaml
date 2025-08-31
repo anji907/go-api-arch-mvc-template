@@ -6,3 +6,27 @@ servers:
   - url: http://0.0.0.0:8080/api/v1
   - url: http://localhost:8080/api/v1
   - url: http://127.0.0.1:8080/api/v1
+paths:
+  /albums:
+    post:
+      summary: Create a new album
+      operationId: createAlbum
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlbumCreateRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlbumResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
