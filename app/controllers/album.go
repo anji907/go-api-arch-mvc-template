@@ -12,14 +12,19 @@ import (
 
 type AlbumHandler struct{}
 
+// アルバムの作成
 func (a *AlbumHandler) CreateAlbum(c *gin.Context) {
 	var requestBody api.CreateAlbumJSONRequestBody
+	// JSON形式のリクストボディをGoの構造体にマッピング
 	if err := c.ShouldBindJSON(&requestBody); err != nil {
+		// エラーが発生したら警告レベルでログ出力
 		logger.Warn(err.Error())
+		// HTTPステータスとメッセージをHTTPレスポンスに書き込む
 		c.JSON(http.StatusBadRequest, api.ErrorResponse{Message: err.Error()})
 		return
 	}
 
+	// Album modelの関数を呼び出す
 	createdAlbum, err := models.CreateAlbum(
 		requestBody.Title,
 		requestBody.ReleaseDate.Time,
@@ -34,6 +39,7 @@ func (a *AlbumHandler) CreateAlbum(c *gin.Context) {
 	c.JSON(http.StatusCreated, createdAlbum)
 }
 
+// アルバムの取得
 func (a *AlbumHandler) GetAlbumById(c *gin.Context, ID int) {
 	album, err := models.GetAlbum(ID)
 	if err != nil {
@@ -45,7 +51,8 @@ func (a *AlbumHandler) GetAlbumById(c *gin.Context, ID int) {
 	c.JSON(http.StatusOK, album)
 }
 
-func (a *AlbumHandler) UpdateAlbumById(c *gin.Context, ID int) {
+// アルバムの更新
+func (a *AlbumHandler) UpdatedAlbumById(c *gin.Context, ID int) {
 	var requestBody api.UpdatedAlbumByIdJSONRequestBody
 	if err := c.ShouldBindJSON(&requestBody); err != nil {
 		logger.Warn(err.Error())
@@ -76,6 +83,7 @@ func (a *AlbumHandler) UpdateAlbumById(c *gin.Context, ID int) {
 	c.JSON(http.StatusOK, album)
 }
 
+// アルバムの削除
 func (a *AlbumHandler) DeleteAlbumById(c *gin.Context, ID int) {
 	album := models.Album{ID: ID}
 	if err := album.Delete(); err != nil {
