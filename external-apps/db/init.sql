@@ -4,7 +4,7 @@ USE api_database;
 
 CREATE TABLE albums (
   id INT PRIMARY KEY AUTO_INCREMENT,
-  release_data DATE,
+  release_date DATE,
   category_id INT,
   title VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
