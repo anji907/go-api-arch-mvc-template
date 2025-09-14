@@ -3,6 +3,7 @@ module go-api-arch-mvc-template
 go 1.24.4
 
 require (
+	github.com/gin-contrib/zap v1.1.5
 	github.com/swaggo/swag v1.8.12
 	gorm.io/driver/mysql v1.6.0
 )
