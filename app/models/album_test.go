@@ -72,7 +72,7 @@ func (suite *AlbumTestSuite) TestAlbum() {
 	suite.Assert().Nil(err)
 	deletedAlbum, err := models.GetAlbum(updatedAlbum.ID)
 	suite.Assert().Nil(deletedAlbum)
-	suite.Assert().True(strings.Contains("record not founc", err.Error()))
+	suite.Assert().True(strings.Contains("record not found", err.Error()))
 }
 
 // JSONへの変換処理をテスト
@@ -80,7 +80,7 @@ func (suite *AlbumTestSuite) TestAlbumMarshal() {
 	album := models.Album{
 		Title:       "Test",
 		ReleaseDate: Str2time("2023-01-01"),
-		Category:    &models.Category{},
+		Category:    &models.Category{Name: "sports"},
 	}
 	anniversary := time.Now().Year() - 2023
 	albumJSON, err := album.MarshalJSON()
