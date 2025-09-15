@@ -1,11 +1,14 @@
 package models_test
 
 import (
+	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
 
@@ -16,6 +19,76 @@ import (
 type AlbumTestSuite struct {
 	tester.DBSQLiteSuite
 	originalDB *gorm.DB
+}
+
+// モックデータベースを使えるようにする
+func (suite *AlbumTestSuite) MockDB() sqlmock.Sqlmock {
+	mock, mockGormDB := tester.MockDB()
+	models.DB = mockGormDB
+	return mock
+}
+
+// Album作成に失敗した時の挙動をテスト
+func (suite *AlbumTestSuite) TestAlbumCreateFailure() {
+	mockDB := suite.MockDB()
+	mockDB.ExpectQuery(
+		regexp.QuoteMeta("SELECT * FROM `categories` WHERE `categories`.`name` = ? ORDER BY `categories`.`id` LIMIT ?"),
+	).WithArgs("sports", 1).WillReturnError(errors.New("create error"))
+	createAlbum, err := models.CreateAlbum("Test", Str2time("2023-01-01"), "sports")
+	suite.Assert().Nil(createAlbum)
+	suite.Assert().NotNil(err)
+	suite.Assert().Equal("create error", err.Error())
+}
+
+// Album取得に失敗した時の挙動をテスト
+func (suite *AlbumTestSuite) TestAlbumGetFailure() {
+	mockDB := suite.MockDB()
+	mockDB.ExpectQuery(
+		regexp.QuoteMeta("SELECT * FROM `albums` WHERE `albums`.`id` = ? ORDER BY `albums`.`id` LIMIT ?"),
+	).WithArgs(1, 1).WillReturnError(errors.New("get error"))
+	album, err := models.GetAlbum(1)
+	suite.Assert().Nil(album)
+	suite.Assert().NotNil(err)
+	suite.Assert().Equal("get error", err.Error())
+}
+
+// Album更新に失敗した時の挙動をテスト
+func (suite *AlbumTestSuite) TestAlbumSaveFailure() {
+	mockDB := suite.MockDB()
+	mockDB.ExpectQuery(
+		regexp.QuoteMeta("SELECT * FROM `categories` WHERE `categories`.`name` = ? ORDER BY `categories`.`id` LIMIT ?"),
+	).WithArgs("sports", 1).WillReturnError(errors.New("save error"))
+
+	album := models.Album{
+		Title:       "updated",
+		ReleaseDate: Str2time("2023-01-01"),
+		Category:    &models.Category{Name: "sports"},
+	}
+
+	err := album.Save()
+	suite.Assert().NotNil(err)
+	suite.Assert().Equal("save error", err.Error())
+}
+
+// Album削除に失敗した時の挙動をテスト
+func (suite *AlbumTestSuite) TestAlbumDeleteFailure() {
+	mockDB := suite.MockDB()
+	mockDB.ExpectBegin()
+	mockDB.ExpectExec(
+		"DELETE FROM `albums` WHERE id = ?",
+	).WithArgs(0).WillReturnError(errors.New("delete error"))
+	mockDB.ExpectRollback()
+	mockDB.ExpectCommit()
+
+	album := models.Album{
+		Title:       "Test",
+		ReleaseDate: Str2time("2023-01-01"),
+		Category:    &models.Category{Name: "sports"},
+	}
+
+	err := album.Delete()
+	suite.Assert().NotNil(err)
+	suite.Assert().Equal("delete error", err.Error())
 }
 
 func TestAlbumTestSuite(t *testing.T) {
@@ -94,4 +167,24 @@ func (suite *AlbumTestSuite) TestAlbumMarshal() {
 		"releaseDate":"2023-01-01",
 		"title":"Test"
 	}`, anniversary), string(albumJSON))
+}
+
+// Anniversaryメソッドをテスト
+func (suite *AlbumTestSuite) TestAnniversary() {
+	mockedClock := tester.NewMockClock(Str2time("2022-04-01"))
+
+	album := models.Album{ReleaseDate: Str2time("2022-04-01")}
+	suite.Assert().Equal(0, album.Anniversary(mockedClock))
+
+	album = models.Album{ReleaseDate: Str2time("2021-04-02")}
+	suite.Assert().Equal(0, album.Anniversary(mockedClock))
+
+	album = models.Album{ReleaseDate: Str2time("2021-04-01")}
+	suite.Assert().Equal(1, album.Anniversary(mockedClock))
+
+	album = models.Album{ReleaseDate: Str2time("2020-04-02")}
+	suite.Assert().Equal(1, album.Anniversary(mockedClock))
+
+	album = models.Album{ReleaseDate: Str2time("2020-04-01")}
+	suite.Assert().Equal(2, album.Anniversary(mockedClock))
 }
