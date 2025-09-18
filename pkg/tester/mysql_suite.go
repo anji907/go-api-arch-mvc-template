@@ -53,7 +53,7 @@ func (suite *DBMySQLSuite) SetupTestContainers() (err error) {
 		Env: map[string]string{
 			"MYSQL_DATABASE":             configs.Config.DBName,
 			"MYSQL_USER":                 configs.Config.DBUser,
-			"MYSQL_PASSwORD":             configs.Config.DBPassword,
+			"MYSQL_PASSWORD":             configs.Config.DBPassword,
 			"MYSQL_ALLOW_EMPTY_PASSWORD": "yes",
 		},
 		ExposedPorts: []string{fmt.Sprintf("%d:3306/tcp", configs.Config.DBPort)},
