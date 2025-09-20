@@ -32,6 +32,29 @@ services:
     networks:
       - api-network
 
+  web:
+    image: web:latest
+    container_name: web
+    environment:
+      DB_USER: app
+      DB_PASSWORD: password
+      DB_DATABASE: api_database
+      DB_HOST: mysql
+    ports:
+      - 8080:8080
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: always
+    networks:
+      - api-network
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://0.0.0.0:8080/health"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+      start_period: 3s
+
 networks:
   api-network:
     driver: bridge
