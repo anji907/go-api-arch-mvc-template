@@ -57,7 +57,8 @@ func (suite *DBMySQLSuite) SetupTestContainers() (err error) {
 			"MYSQL_ALLOW_EMPTY_PASSWORD": "yes",
 		},
 		ExposedPorts: []string{fmt.Sprintf("%d:3306/tcp", configs.Config.DBPort)},
-		WaitingFor:   wait.ForLog("port: 3306 MySQL Community Server"),
+		// 3306ポートで接続可能になるまで待機
+		WaitingFor: wait.ForListeningPort("3306/tcp"),
 	}
 
 	suite.mySQLContainer, err = testcontainers.GenericContainer(
