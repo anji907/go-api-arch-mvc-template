@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// mockClock.Now()で固定された時刻を返す
 type mockClock struct {
 	t time.Time
 }
@@ -23,12 +24,14 @@ func (m mockClock) Now() time.Time {
 
 // データベースの操作をモック化する
 func MockDB() (mock sqlmock.Sqlmock, mockGormDB *gorm.DB) {
+	// モックデータベースの作成
 	mockDB, mock, err := sqlmock.New(
 		sqlmock.QueryMatcherOption(sqlmock.QueryMatcherRegexp))
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
 
+	// モックデータベースに接続
 	mockGormDB, err = gorm.Open(mysql.New(mysql.Config{
 		DSN:                       "mock_db",
 		DriverName:                "mysql",

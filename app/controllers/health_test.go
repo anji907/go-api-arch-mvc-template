@@ -10,8 +10,11 @@ import (
 )
 
 func TestHealthHandler(t *testing.T) {
+	// Create object for record HTTP response
 	w := httptest.NewRecorder()
+	// Create HTTP Request
 	request, _ := http.NewRequest("GET", "/health", nil)
+	// Create gin.Context
 	ginContext, _ := gin.CreateTestContext(w)
 	ginContext.Request = request
 

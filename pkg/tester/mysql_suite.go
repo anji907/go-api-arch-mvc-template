@@ -20,7 +20,9 @@ type DBMySQLSuite struct {
 	ctx            context.Context
 }
 
+// 指定したポート番号が使用可能かをチェック
 func CheckPort(host string, port int) bool {
+	// 指定したアドレスに接続
 	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", host, port))
 	if conn != nil {
 		conn.Close()
@@ -47,7 +49,9 @@ func WaitForPort(host string, port int, timeout time.Duration) bool {
 // テスト用のMySQLを立ち上げる
 func (suite *DBMySQLSuite) SetupTestContainers() (err error) {
 	WaitForPort(configs.Config.DBHost, configs.Config.DBPort, 10*time.Second)
+	// 空のContextを作成
 	suite.ctx = context.Background()
+	// テスト用のMySQLコンテナに対する設定のリクエストを作成
 	req := testcontainers.ContainerRequest{
 		Image: "mysql:8",
 		Env: map[string]string{
@@ -57,7 +61,7 @@ func (suite *DBMySQLSuite) SetupTestContainers() (err error) {
 			"MYSQL_ALLOW_EMPTY_PASSWORD": "yes",
 		},
 		ExposedPorts: []string{fmt.Sprintf("%d:3306/tcp", configs.Config.DBPort)},
-		// 3306ポートで接続可能になるまで待機
+		// コンテナの起動を待つ条件を設定: 3306ポートで接続可能になるまで待機
 		WaitingFor: wait.ForListeningPort("3306/tcp"),
 	}
 
@@ -65,7 +69,8 @@ func (suite *DBMySQLSuite) SetupTestContainers() (err error) {
 		suite.ctx,
 		testcontainers.GenericContainerRequest{
 			ContainerRequest: req,
-			Started:          true,
+			// コンテナ作成と同時に起動
+			Started: true,
 		},
 	)
 	if err != nil {

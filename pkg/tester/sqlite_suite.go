@@ -20,6 +20,7 @@ func (suite *DBSQLiteSuite) SetupSuite() {
 	suite.Assert().Nil(err)
 
 	for _, model := range models.GetModels() {
+		// モデルに応じたテーブルを作成
 		err := models.DB.AutoMigrate(model)
 		suite.Assert().Nil(err)
 	}

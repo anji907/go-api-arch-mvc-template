@@ -1,3 +1,7 @@
+/*
+テスト対象となるパッケージの外部から呼び出すAPIをテストするため
+パッケージ名が異なっている
+*/
 package models_test
 
 import (
@@ -18,6 +22,7 @@ import (
 
 type AlbumTestSuite struct {
 	tester.DBSQLiteSuite
+	// テスト前のDBの状態を保存するためのフィールド
 	originalDB *gorm.DB
 }
 
@@ -28,9 +33,32 @@ func (suite *AlbumTestSuite) MockDB() sqlmock.Sqlmock {
 	return mock
 }
 
+func TestAlbumTestSuite(t *testing.T) {
+	suite.Run(t, new(AlbumTestSuite))
+}
+
+// DBを初期化
+func (suite *AlbumTestSuite) SetupSuite() {
+	suite.DBSQLiteSuite.SetupSuite()
+	suite.originalDB = models.DB
+}
+
+// 各テストケースの後に実行
+func (suite *AlbumTestSuite) AfterTest(suiteName, testName string) {
+	// テスト前のデータベースの状態に戻す
+	models.DB = suite.originalDB
+}
+
+// 文字列をtime.Time型に変換
+func Str2time(t string) time.Time {
+	parsedTime, _ := time.Parse("2006-01-02", t)
+	return parsedTime
+}
+
 // Album作成に失敗した時の挙動をテスト
 func (suite *AlbumTestSuite) TestAlbumCreateFailure() {
 	mockDB := suite.MockDB()
+	// 特定のクエリに対して特定のエラーを返す
 	mockDB.ExpectQuery(
 		regexp.QuoteMeta("SELECT * FROM `categories` WHERE `categories`.`name` = ? ORDER BY `categories`.`id` LIMIT ?"),
 	).WithArgs("sports", 1).WillReturnError(errors.New("create error"))
@@ -73,11 +101,14 @@ func (suite *AlbumTestSuite) TestAlbumSaveFailure() {
 // Album削除に失敗した時の挙動をテスト
 func (suite *AlbumTestSuite) TestAlbumDeleteFailure() {
 	mockDB := suite.MockDB()
+	// トランザクションの開始をテスト
 	mockDB.ExpectBegin()
 	mockDB.ExpectExec(
 		"DELETE FROM `albums` WHERE id = ?",
 	).WithArgs(0).WillReturnError(errors.New("delete error"))
+	// トランザクションのロールバックをテスト
 	mockDB.ExpectRollback()
+	// トランザクションのコミットをテスト
 	mockDB.ExpectCommit()
 
 	album := models.Album{
@@ -89,26 +120,6 @@ func (suite *AlbumTestSuite) TestAlbumDeleteFailure() {
 	err := album.Delete()
 	suite.Assert().NotNil(err)
 	suite.Assert().Equal("delete error", err.Error())
-}
-
-func TestAlbumTestSuite(t *testing.T) {
-	suite.Run(t, new(AlbumTestSuite))
-}
-
-func (suite *AlbumTestSuite) SetupSuite() {
-	suite.DBSQLiteSuite.SetupSuite()
-	suite.originalDB = models.DB
-}
-
-// 各テストケースの後に実行
-func (suite *AlbumTestSuite) AfterTest(suiteName, testName string) {
-	// テスト前のデータベースの状態に戻す
-	models.DB = suite.originalDB
-}
-
-func Str2time(t string) time.Time {
-	parsedTime, _ := time.Parse("2006-01-02", t)
-	return parsedTime
 }
 
 // AlbumモデルのCRUDをテスト
@@ -156,6 +167,7 @@ func (suite *AlbumTestSuite) TestAlbumMarshal() {
 		Category:    &models.Category{Name: "sports"},
 	}
 	anniversary := time.Now().Year() - 2023
+	// 構造体をJSONに変換
 	albumJSON, err := album.MarshalJSON()
 	suite.Assert().Nil(err)
 	suite.Assert().JSONEq(fmt.Sprintf(`{

@@ -48,12 +48,15 @@ func (suite *AlbumControllersSuite) AfterTest(suiteName, testName string) {
 }
 
 func (suite *AlbumControllersSuite) TestCreate() {
+	// Create HTTP request
 	request, _ := api.NewCreateAlbumRequest("/api/v1", api.CreateAlbumJSONRequestBody{
 		Title:       "test",
 		Category:    api.Category{Name: "sports"},
 		ReleaseDate: api.ReleaseDate{Time: time.Now()},
 	})
+	// Create response recorder
 	w := httptest.NewRecorder()
+	// Create gin.Context
 	ginContext, _ := gin.CreateTestContext(w)
 	ginContext.Request = request
 
